@@ -1,0 +1,50 @@
+<mediawiki >
+  <siteinfo>
+    <sitename>MYTITLE</sitename>
+    <dbname>DBNAME</dbname>
+    <base>URL OF THE MAIN PAGE</base>
+    <generator>MEDIWIKI VERSION USED</generator>
+    <case>CASE OF PAGE TITLES</case>
+    <namespaces>
+      <namespace key="321" case="first-letter">FIRST NAMESPACE</namespace>
+      <namespace key="1984" case="first-letter">SECOND NAMESPACE</namespace>
+    </namespaces>
+  </siteinfo>
+
+  <page>
+    <title>CURRENT PAGE TITLE</title>
+    <ns>321</ns>
+    <id>9</id>
+
+    <revision>
+      <id>1</id>
+      <timestamp>2003-12-18T17:08:48Z</timestamp>
+      <contributor>
+        <username>U999</username>
+        <id>999</id>
+      </contributor>
+      <model>wikitext</model>
+      <format>text/x-wiki</format>
+      <text bytes="-1">INITIAL TEXT</text>
+      <sha1>SHA1SHA1</sha1>
+      <minor />
+      <comment>MY COMMENT</comment>
+    </revision> 
+
+    <revision>
+      <id>3</id>
+      <parentid>1</parentid>
+      <timestamp>2003-12-18T19:08:48Z</timestamp>
+      <contributor>
+        <username>U888</username>
+        <id>888</id>
+      </contributor>
+      <model>wikitext</model>
+      <format>text/x-wiki</format>
+      <text bytes="-9">MODIFIED TEXT</text>
+      <sha1>SHA1SHA1</sha1>
+    </revision>
+
+  </page>
+
+</mediawiki>

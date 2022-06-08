@@ -1,0 +1,46 @@
+<mediawiki >
+  <siteinfo>
+    <sitename>MYTITLE</sitename>
+    <dbname>DBNAME</dbname>
+    <base>URL OF THE MAIN PAGE</base>
+    <generator>MEDIWIKI VERSION USED</generator>
+    <case>CASE OF PAGE TITLES</case>
+    <namespaces>
+      <namespace key="321" case="first-letter">FIRST NAMESPACE</namespace>
+      <namespace key="1984" case="first-letter">SECOND NAMESPACE</namespace>
+    </namespaces>
+  </siteinfo>
+
+  <page>
+    <title>cUrrent page title</title>
+    <ns>321</ns>
+    <id>9</id>
+
+    <revision>
+      <id>1</id>
+      <timestamp>2003-12-18T19:08:48Z</timestamp>
+      <contributor>
+        <username>U888</username>
+        <id>888</id>
+      </contributor>
+      <model>wikitext</model>
+      <format>text/x-wiki</format>
+      <text bytes="-9">Some links: [[link1]] link1-2 [[link2|link2-text]] link2-3 [[]] link3-4 [[Category:Old age]], link4-5 [[:Category:By Period]] link5-6 [[simple:cUrrent page title]] link6-7 [https://github.com/ericktokuda|external link] link7-8 [[fr:french page|Link to wikipedia in another language]] link8-9 [[Wiktionary:es:Spanish page|Interwiki link]] link9-10 <nowiki>[[Link10|]]</nowiki> link10-11 [[Link11]] link11-12 [[Link12]]</text>
+      <sha1>SHA1SHA1</sha1>
+    </revision>
+
+    <revision>
+      <id>1</id>
+      <timestamp>2003-12-18T19:08:48Z</timestamp>
+      <contributor>
+        <username>U888</username>
+        <id>888</id>
+      </contributor>
+      <model>wikitext</model>
+      <format>text/x-wiki</format>
+      <text bytes="-9">Some links: [[link1]] link1-2 [[link2|link2-text]] link2-3 [[]] link3-4 [[Category:Old age]], link4-5 [[:Category:By Period]] link5-6 [[simple:cUrrent page title]] link6-7 [https://github.com/ericktokuda|external link] link7-8 [[fr:french page|Link to wikipedia in another language]] link8-9 [[Wiktionary:es:Spanish page|Interwiki link]] link9-10 <nowiki>[[Link10|]]</nowiki> link10-11 [[Link11]] link11-12 [[Link12]]</text>
+      <sha1>SHA1SHA1</sha1>
+    </revision>
+  </page>
+
+</mediawiki>

@@ -1,0 +1,326 @@
+Language,Symbol,Available
+English,en,Active
+French,fr,Active
+German,de,Active
+Japanese,ja,Active
+Spanish,es,Active
+Russian,ru,Active
+"Chinese (written vernacular Chinese, a form of Mandarin)",zh,Active
+Italian,it,Active
+Portuguese,pt,Active
+Persian,fa,Active
+Arabic,ar,Active
+Polish,pl,Active
+Dutch,nl,Active
+Ukrainian,uk,Active
+Hebrew,he,Active
+Turkish,tr,Active
+Indonesian,id,Active
+Czech,cs,Active
+Swedish,sv,Active
+Vietnamese,vi,Active
+Korean,ko,Active
+Finnish,fi,Active
+Hungarian,hu,Active
+Greek,el,Active
+Norwegian (Bokmål),no,Active
+Catalan,ca,Active
+Bengali,bn,Active
+Simple English,simple,Active
+Hindi,hi,Active
+Serbian,sr,Active
+Thai,th,Active
+Romanian,ro,Active
+Danish,da,Active
+Uzbek,uz,Active
+Azerbaijani,az,Active
+Bulgarian,bg,Active
+Basque,eu,Active
+Estonian,et,Active
+Slovak,sk,Active
+Malay,ms,Active
+Croatian,hr,Active
+Armenian,hy,Active
+Slovene,sl,Active
+Cantonese,zh-yue,Active
+Lithuanian,lt,Active
+Latvian,lv,Active
+Esperanto,eo,Active
+Tamil,ta,Active
+Galician,gl,Active
+Urdu,ur,Active
+Belarusian,be,Active
+Georgian,ka,Active
+Kazakh,kk,Active
+Malayalam,ml,Active
+Macedonian,mk,Active
+Albanian,sq,Active
+Serbo-Croatian,sh,Active
+Bosnian,bs,Active
+Afrikaans,af,Active
+Kannada,kn,Active
+Egyptian Arabic,arz,Active
+Telugu,te,Active
+Cebuano,ceb,Active
+Latin,la,Active
+Marathi,mr,Active
+Kurdish (Sorani),ckb,Active
+Burmese,my,Active
+Swahili,sw,Active
+Tagalog,tl,Active
+Asturian,ast,Active
+Belarusian (Taraškievica),be-tarask,Active
+Icelandic,is,Active
+Norwegian (Nynorsk),nn,Active
+Eastern Punjabi,pa,Active
+Assamese,as,Active
+Iran Azerbaijani,azb,Active
+Welsh,cy,Active
+Tatar,tt,Active
+Hausa,ha,Active
+Javanese,jv,Active
+Mongolian,mn,Active
+Sinhalese,si,Active
+Kurdish (Kurmanji),ku,Active
+Scots,sco,Active
+Breton,br,Active
+Occitan,oc,Active
+Waray,war,Active
+Alemannic,als,Active
+Southern Min /Min Nan,zh-min-nan,Active
+Bashkir,ba,Active
+Kyrgyz,ky,Active
+Nepali,ne,Active
+Irish,ga,Active
+Tajik,tg,Active
+Aragonese,an,Active
+Classical Chinese,zh-classical,Active
+Gujarati,gu,Active
+Luxembourgish,lb,Active
+Igbo,ig,Active
+Khmer,km,Active
+Wu,wuu,Active
+West Frisian,fy,Active
+Yoruba,yo,Active
+Somali,so,Active
+Chechen,ce,Active
+Lombard,lmo,Active
+Western Punjabi,pnb,Active
+Minangkabau,min,Active
+Yiddish,yi,Active
+Bavarian,bar,Active
+Old English /Anglo-Saxon,ang,Active
+Malagasy,mg,Active
+Ido,io,Active
+Odia,or,Active
+Central Bikol,bcl,Active
+Pashto,ps,Active
+Yakut/Sakha,sah,Active
+Crimean Tatar,crh,Active
+Sanskrit,sa,Active
+Sundanese,su,Active
+Maltese,mt,Active
+Bihari (Bhojpuri),bh,Active
+Chuvash,cv,Active
+Volapük,vo,Active
+Kinyarwanda,rw,Active
+Sicilian,scn,Active
+Amharic,am,Active
+Faroese,fo,Active
+Haitian Creole,ht,Active
+Banjar,bjn,Active
+Lao,lo,Active
+Santali,sat,Active
+Scottish Gaelic,gd,Active
+Silesian,szl,Active
+Corsican,co,Active
+Low German,nds,Active
+Quechua,qu,Active
+Westerm Armenian,hyw,Active
+Mazanderani,mzn,Active
+Zulu,zu,Active
+Ligurian,lij,Active
+Interlingua,ia,Active
+Acehnese,ace,Active
+Zazaki,diq,Active
+Avar,av,Active
+Aymara,ay,Active
+Upper Sorbian,hsb,Active
+Piedmontese,pms,Active
+Turkmen,tk,Active
+Ossetian,os,Active
+Maithili,mai,Active
+Sindhi,sd,Active
+Interlingue,ie,Active
+Mingrelian,xmf,Active
+Limburgish,li,Active
+Picard,pcd,Active
+Twi,tw,Active
+Venetian,vec,Active
+Veps,vep,Active
+Cornish,kw,Active
+Erzya,myv,Active
+Old Church Slavonic,cu,Active
+Sardinian,sc,Active
+Meadow Mari,mhr,Active
+West Flemish,vls,Active
+Kotava,avk,Active
+Buryat,bxr,Active
+Kashmiri,ks,Active
+Bishnupriya Manipuri,bpy,Active
+Judaeo-Spanish /Ladino,lad,Active
+Rusyn,rue,Active
+Fiji Hindi,hif,Active
+Fula,ff,Active
+Hakka,hak,Active
+Lingala,ln,Active
+Neapolitan,nap,Active
+Romansh,rm,Active
+Extremaduran,ext,Active
+Balinese,ban,Active
+Dagbani,dag,Active
+Kashubian,csb,Active
+Manx,gv,Active
+Tibetan,bo,Active
+Walloon,wa,Active
+Ilokano,ilo,Active
+Lingua Franca Nova,lfn,Active
+Moroccan Arabic,ary,Active
+North Frisian,frr,Active
+Shona,sn,Active
+Guarani,gn,Active
+Emilian-Romagnol,eml,Active
+Gagauz,gag,Active
+Kirundi,rn,Active
+Newar/Nepal Bhasa,new,Active
+Northern Sami,se,Active
+Abkhaz,ab,Active
+Dhivehi,dv,Active
+Lower Sorbian,dsb,Active
+Friulian,fur,Active
+Kalmyk,xal,Active
+Mirandese,mwl,Active
+Māori,mi,Active
+Nahuatl,nah,Active
+Dutch Low Saxon,nds-nl,Active
+Uyghur,ug,Active
+Chewa,ny,Active
+Franco-Provençal /Arpitan,frp,Active
+Gan Chinese,gan,Active
+Gilaki,glk,Active
+Hawaiian,haw,Active
+Lezgian,lez,Active
+N'Ko,nqo,Active
+Novial,nov,Active
+Oromo,om,Active
+Palatine German,pfl,Active
+Tswana,tn,Active
+Võro,fiu-vro,Active
+Tulu,tcy,Active
+Ewe,ee,Active
+Gungbe,guw,Active
+Inari Sami,smn,Active
+Komi,kv,Active
+Eastern Min /Min Dong,cdo,Active
+Navajo,nv,Active
+Tyap,kcg,Active
+Udmurt,udm,Active
+Kapampangan,pam,Active
+Samogitian,bat-smg,Active
+Adyghe,ady,Active
+Akan,ak,Active
+Doteli,dty,Active
+Kabardian,kbd,Active
+Karakalpak,kaa,Active
+Sotho,st,Active
+Tongan,to,Active
+Zeelandic,zea,Active
+Kabyle,kab,Active
+Mon,mnw,Active
+Gorontalo,gor,Active
+Gothic,got,Active
+Ingush,inh,Active
+Livvi-Karelian,olo,Active
+Papiamento,pap,Active
+Saterland Frisian,stq,Active
+Tsonga,ts,Active
+Aromanian,roa-rup,Active
+Xhosa,xh,Active
+Hill Mari,mrj,Active
+Inuktitut,iu,Active
+Kongo,kg,Active
+Moksha,mdf,Active
+Swazi,ss,Active
+Tumbuka,tum,Active
+Tuvan,tyv,Active
+Konkani,gom,Active
+Saraiki,skr,Active
+Shan,shn,Active
+Bislama,bi,Active
+Cree,cr,Active
+Lojban,jbo,Active
+Nauruan,na,Active
+Norman,nrm,Active
+Ripuarian,ksh,Active
+Wolof,wo,Active
+Amis,ami,Active
+Banyumasan,map-bms,Active
+Chamorro,ch,Active
+Dzongkha,dz,Active
+Norfolk,pih,Active
+Sango,sg,Active
+Shilha,shi,Active
+Aramaic,arc,Active
+Tarantino,roa-tara,Active
+Tigrinya,ti,Active
+Zamboanga Chavacano,cbk-zam,Active
+Dinka,din,Active
+Kabiye,kbp,Active
+Ladin,lld,Active
+Nias,nia,Active
+Atikamekw,atj,Active
+Greenlandic,kl,Active
+Kikuyu,ki,Active
+Komi-Permyak,koi,Active
+Lak,lbe,Active
+Luganda,lg,Active
+Pennsylvania German,pdc,Active
+Samoan,sm,Active
+Tetum,tet,Active
+Tok Pisin,tpi,Active
+Vlax Romani,rmy,Active
+Zhuang,za,Active
+Bambara,bm,Active
+Cherokee,chr,Active
+Inupiaq,ik,Active
+Karachay-Balkar,krc,Active
+Madurese,mad,Active
+Northern Sotho,nso,Active
+pinayuanan,pwn,Active
+Pontic Greek,pnt,Active
+Venda,ve,Active
+Fijian,fj,Active
+Cheyenne,chy,Active
+Jamaican Patois,jam,Active
+Pali,pi,Active
+Tahitian,ty,Active
+Buginese,bug,Active
+Pangasinan,pag,Active
+Latgalian,ltg,Active
+Awadhi,awa,Active
+Sakizaya,szy,Active
+Sranan Tongo,srn,Active
+Guianan Creole,gcr,Active
+English,nostalgia,Active
+Northern Luri,lrc,Locked
+Afar,aa,Closed
+Choctaw,cho,Closed
+Herero,hz,Closed
+Hiri Motu,ho,Closed
+Kanuri,kr,Closed
+Kuanyama,kj,Closed
+Marshallese,mh,Closed
+Muscogee,mus,Closed
+Ndonga,ng,Closed
+Nuosu/Sichuan Yi,ii,Closed
+Moldovan,mo,Deleted
