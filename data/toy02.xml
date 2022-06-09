@@ -25,7 +25,7 @@
       </contributor>
       <model>wikitext</model>
       <format>text/x-wiki</format>
-      <text bytes="-9">Some links: [[link1]] link1-2 [[link2|link2-text]] link2-3 [[]] link3-4 [[Category:Old age]], link4-5 [[:Category:By Period]] link5-6 [[simple:cUrrent page title]] link6-7 [https://github.com/ericktokuda|external link] link7-8 [[fr:french page|Link to wikipedia in another language]] link8-9 [[Wiktionary:es:Spanish page|Interwiki link]] link9-10 <nowiki>[[Link10|]]</nowiki> link10-11 [[Link11]] link11-12 [[Link12]]</text>
+      <text bytes="-9">#REDiRECT[[link1]] link1-2 [[link2|link2-text]] link2-3 [[]] link3-4 [[Category:Old age]], link4-5 [[:Category:By Period]] link5-6 [[simple:cUrrent page title]] link6-7 [https://github.com/ericktokuda|external link] link7-8 [[fr:french page|Link to wikipedia in another language]] link8-9 [[Wiktionary:es:Spanish page|Interwiki link]] link9-10 <nowiki>[[Link10|]]</nowiki> link10-11 [[Link11]] link11-12 [[Link12]]</text>
       <sha1>SHA1SHA1</sha1>
     </revision>
 
