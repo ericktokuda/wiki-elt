@@ -5,11 +5,10 @@ Inspired by the Deep Learning Cookbook, from D.Osinga.
 
 import argparse
 import time, datetime
-import os
+import os, sys
 from os.path import join as pjoin
 import inspect
 
-import sys
 import numpy as np
 import matplotlib; matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -24,7 +23,9 @@ import multiprocessing
 from multiprocessing import Pool
 import re
 from subprocess import Popen, DEVNULL
+import traceback
 
+SEP = '##########################################################'
 
 class Wikitype:
     BROKEN    = -1
@@ -107,6 +108,15 @@ def classify_wikilinks(links):
         breakpoint()
 
 ##########################################################
+def process_dump_protected(dumppath, outdir):
+    try:
+        process_dump(dumppath, outdir)
+    except Exception as e:
+        msg = traceback.format_exc()
+        errpath = pjoin(outdir, 'errors.log')
+        open(errpath, 'a').write('{}\n{}\n{}\n'.format(dumppath, msg, SEP))
+
+##########################################################
 def process_dump(dumppath, outdir):
     fname = os.path.basename(dumppath)
     suff = fname.replace('.bz2', '').split('.xml-')[1]
@@ -136,8 +146,7 @@ def process_dump(dumppath, outdir):
         os.makedirs(tmpdir) # Start processing
 
     for i, page in enumerate(dump):
-        # if i > 2: break # TODO: remove this
-        # info('Pageid: {}'.format(page.id))
+        info('Pageid {}'.format(page.id))
         isredir = 1 if page.redirect else 0
         pageinfos.append([page.id, page.title, page.namespace, isredir])
 
@@ -155,7 +164,10 @@ def process_dump(dumppath, outdir):
 
             parid = rev.parent_id if rev.parent_id else -1
             isminor = 1 if rev.minor else 0
-            userid = rev.user.id if rev.user.id else -1
+
+            if not rev.user or not rev.user.id: userid = -1
+            else: userid = rev.user.id
+            # userid = rev.user.id if rev.user.id else -1 # TODO: faulty
 
             # [revid, pageid, parentid, timestamp, userid, isminor]
             row = [rev.id, rev.page.id, parid, rev.timestamp, userid, isminor]
@@ -165,7 +177,17 @@ def process_dump(dumppath, outdir):
                 continue
             elif re.search('^\s*#redirect', rev.text.lower()):
                 isredir = 1
-                link = wikilinks1[0].replace('[', '').replace(']', '')
+
+                if len(wikilinks1) == 0:
+                    idx = rev.text.find('#redirect') + 9
+                    link = rev[9:].strip().replace('[', '').replace(']', '')
+                else:
+                    link = wikilinks1[0].replace('[', '').replace(']', '')
+
+                # link = l.replace('[', '').replace(']', '')
+                # pipeidx = link.find('|') # Remove text of the link
+                # if pipeidx >= 0: link = link[:pipeidx]
+
                 # [revid, tgt, isurl, isredirect]
                 linkrows.append([rev.id, link, 0, isredir])
                 continue
@@ -188,8 +210,10 @@ def process_dump(dumppath, outdir):
         pd.DataFrame(revrows).to_csv(revpath1, index=False, header=False)
 
     cmd = "find '{}' -maxdepth 1 -type f -name '*_revs.csv' -print0 | sort -z | xargs -0 cat -- > '{}' && find '{}' -maxdepth 1 -type f -name '*_links.csv' -print0 | sort -z | xargs -0 cat -- > '{}' && rm -rf '{}'".format(tmpdir, revpath0, tmpdir, linkpath0, tmpdir)
+    info('cmd:{}'.format(cmd))
     Popen(cmd, shell=True, stdout=DEVNULL, stderr=DEVNULL)
     pd.DataFrame(pageinfos).to_csv(pagepath0, index=False, header=False)
+    info('Finished {}'.format(suff))
 
 ##########################################################
 def parse_link(link):
@@ -287,8 +311,8 @@ def process_dumps(dumpsdir, nprocs, outdir):
     lang = list(langs)[0]; dumpdt = list(dumpdts)[0]
 
     if nprocs == 1:
-        [ process_dump(p, outdir) for p in dumppaths ]
+        [ process_dump_protected(p, outdir) for p in dumppaths ]
     else:
         fargs = [ [p, outdir] for p in dumppaths ]
         with Pool(processes=nprocs) as pool:
-            L = pool.starmap(process_dump, fargs)
+            L = pool.starmap(process_dump_protected, fargs)
