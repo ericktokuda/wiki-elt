@@ -32,10 +32,21 @@ class Wikitype:
     INTERLANG =  5
 
 # LANG DEPENDANT
-filens = ['Image', 'Media', 'File']
-wikins = ['WP', 'Wikipedia', 'Project']
-talkns = ['WT', 'Project talk', 'Project talk']
-userns = ['User']
+# filens = ['Image', 'Media', 'File']
+# wikins = ['WP', 'Wikipedia', 'Project']
+# talkns = ['WT', 'Project talk', 'Project talk']
+# userns = ['User']
+
+# https://en.wikipedia.org/wiki/Wikipedia:Namespace
+ns_sbj = ['Main', 'Article', 'User', 'Wikipedia', 'File', # Subject
+        'MediaWiki' 'Template', 'Help', 'Category', 'Portal',
+        'Draft', 'TimedText', 'Module', 'Gadget', 'Gadget definition']
+ns_sbja = ['WP']
+ns_tk = ['Talk'] + [s + ' talk' for s in ns_sbj[2:]] # Talk
+ns_tka  = ['WT']
+ns_vrt = ['Special', 'Media'] # Virtual
+ns_vrta = ['Image', 'File']
+wikins = ns_sbj + ns_sbja + ns_tk + ns_tka + ns_vrt + ns_vrta
 
 ##########################################################
 def classify_wikilinks(links):
@@ -44,20 +55,48 @@ def classify_wikilinks(links):
         link = l[2:-2]
 
         pipeidx = link.find('|') # Remove text of the link
-        if pipeidx > 0: link = link[:pipeidx]
+        if pipeidx >= 0: link = link[:pipeidx]
 
-        if link[0] == '#': # Not considering loops at the moment
-            continue
+        if link == '': info('Error. Simple "|" found')
 
-        if not ':' in link: # (Supposedly) a regular inner link
-            info(':{}'.format(link))
-            # Gonna do something
+        link1 = 'page'
+        link2 = 'page#section'
+        link3 = ':page#section'
+        link4 = 'Help:page#section'
+
+        link = link4
+
+
+        pipeidx = link.find('#')
+        if pipeidx == 0:
+            # Link points to a section of the same page
+            info(5)
+            pass
+        else: # Remove section of the link
+            link = link[:pipeidx]
+
+        tokens = link.split(':')
+        ncommas = len(tokens) - 1
+
+        if ncommas == 0:
+            info(10)
+            # A regular inner link (eg 'Birds')
+        elif ncommas == 1: # Here (n==1) we may still have an inner link
+            if tokens[0] == '':
+                info(15)
+                # Transcluded inner link (eg ':Birds'))
+                # We are treating as a regular wikilink
+            else:
+                # One single ns (eg 'Help:People')
+                # Will need to parse the ns
+                info(20)
         else:
-            tokens = link.split(':')
-            if tokens[0] in filens:
-                continue
-            elif parts
+            # if len(t
+            # if tokens[0] in filens:
+                # continue
+            # elif parts
             # Will need to check 'Image, Wikipedia, Wikibooks,
+            pass
 
         breakpoint()
     
@@ -93,6 +132,7 @@ def parse_links(dumpsdir, olinksdir):
         # If no <nowiki />, or <nowiki></nowiki> mwxml does not work properly
 
         for rev in page:
+            # TODO: check REDIRECT
             print(rev.parent_id, rev.id, rev.text)
             x = mwparse(rev.text)
             print(x.filter_wikilinks())
@@ -103,7 +143,7 @@ def parse_links(dumpsdir, olinksdir):
             print('######################')
             print(wikilinks1)
             print('######################')
-            wikilinks2 = classify_wikilinks(wikilinks1)
+            # wikilinks2 = classify_wikilinks(wikilinks1)
             breakpoint()
     return
 
