@@ -42,10 +42,9 @@ class Wikitype:
 # talkns = ['WT', 'Project talk', 'Project talk']
 # userns = ['User']
 
+# Source: https://en.wikipedia.org/wiki/Wikipedia:Namespace
 # Non-talk and non-deprecated namespace ids
 ns_ids = [0, 2, 4, 6, 8, 10, 12, 14, 100, 118, 710, 828, -1, -2]
-
-# https://en.wikipedia.org/wiki/Wikipedia:Namespace
 ns_sbj = ['Main', 'Article', 'User', 'Wikipedia', 'File', # Subject
         'MediaWiki' 'Template', 'Help', 'Category', 'Portal',
         'Draft', 'TimedText', 'Module', 'Gadget', 'Gadget definition']
