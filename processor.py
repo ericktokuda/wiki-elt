@@ -108,6 +108,18 @@ def classify_wikilinks(links):
         breakpoint()
 
 ##########################################################
+def strip_after_delim(txt, delim):
+    idx = txt.find(delim)
+    if idx >= 0: txt = txt[:idx]
+    return txt
+
+##########################################################
+def remove_characters(txt, chars):
+    for c in chars:
+        txt = txt.replace(c, '')
+    return txt
+
+##########################################################
 def process_dump_protected(dumppath, outdir):
     try:
         process_dump(dumppath, outdir)
@@ -179,14 +191,12 @@ def process_dump(dumppath, outdir):
                 isredir = 1
 
                 if len(wikilinks1) == 0:
-                    idx = rev.text.find('#redirect') + 9
-                    link = rev[9:].strip().replace('[', '').replace(']', '')
+                    idx = rev.text.find('#redirect') + 9 # len of #redirect
+                    link = remove_characters(rev.text[idx:].strip(), '[]')
                 else:
-                    link = wikilinks1[0].replace('[', '').replace(']', '')
+                    link = remove_characters(wikilinks1[0], '[]')
 
-                # link = l.replace('[', '').replace(']', '')
-                # pipeidx = link.find('|') # Remove text of the link
-                # if pipeidx >= 0: link = link[:pipeidx]
+                link = strip_after_delim(link, delim='|')
 
                 # [revid, tgt, isurl, isredirect]
                 linkrows.append([rev.id, link, 0, isredir])
@@ -195,15 +205,13 @@ def process_dump(dumppath, outdir):
                 isredir = 0
 
             for l in wikilinks1:
-                link = l.replace('[', '').replace(']', '')
-                pipeidx = link.find('|') # Remove text of the link
-                if pipeidx >= 0: link = link[:pipeidx]
+                link = remove_characters(l, '[]')
+                link = strip_after_delim(link, delim='|')
                 linkrows.append([rev.id, link, 0, isredir])
 
             for l in extlinks1:
-                link = l.replace('[', '').replace(']', '')
-                spaceidx = link.find(' ') # Remove text of the link
-                if spaceidx >= 0: link = link[:spaceidx]
+                link = remove_characters(l, '[]')
+                link = strip_after_delim(link, delim='|')
                 linkrows.append([rev.id, link, 1, isredir])
 
         pd.DataFrame(linkrows).to_csv(linkpath1, index=False, header=False)
