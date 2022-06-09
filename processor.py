@@ -216,7 +216,7 @@ def process_dump(dumppath, outdir):
 
             for l in extlinks1:
                 link = remove_characters(l, '[]')
-                link = strip_after_delim(link, delim='|')
+                link = strip_after_delim(link, delim=' ')
                 linkrows.append([rev.id, link, 1, isredir])
 
         pd.DataFrame(linkrows).to_csv(linkpath1, index=False, header=False)
