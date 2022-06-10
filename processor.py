@@ -115,11 +115,6 @@ def strip_after_delim(txt, delim):
     if idx >= 0: txt = txt[:idx]
     return txt
 
-##########################################################
-def remove_characters(txt, chars):
-    for c in chars:
-        txt = txt.replace(c, '')
-    return txt
 
 ##########################################################
 def process_dump_protected(dumppath, outdir):
@@ -144,6 +139,7 @@ def process_dump(dumppath, outdir):
 
     pagepath0 = pjoin(outdir, suff + '_pages.csv')
     revpath0 = pjoin(outdir, suff + '_revs.csv')
+    errpath0 = pjoin(outdir, suff + '_reverr.csv')
     linkpath0 = pjoin(outdir, suff + '_links.csv')
 
     if os.path.isfile(pagepath0): return # Already processed dump
@@ -161,6 +157,7 @@ def process_dump(dumppath, outdir):
 
     for i, page in enumerate(dump):
         info('Pageid {}'.format(page.id))
+        # if i > 3: break # For debugging
         if not page.namespace in ns_ids: continue
 
         isredir = 1 if page.redirect else 0
@@ -168,22 +165,30 @@ def process_dump(dumppath, outdir):
 
         linkpath1 = pjoin(outdir, tmpdir, '{:08d}_links.csv'.format(page.id))
         revpath1 = pjoin(outdir, tmpdir, '{:08d}_revs.csv'.format(page.id))
+        errpath1 = pjoin(outdir, tmpdir, '{:08d}_reverr.csv'.format(page.id))
 
         if os.path.isfile(revpath1): continue
 
         linkrows = []
         revrows = []
+        errrows = []
         for rev in page:
-            aux = mwparse(rev.text)
-            wikilinks1 = aux.filter_wikilinks()
-            extlinks1 = aux.filter_external_links()
-
             parid = rev.parent_id if rev.parent_id else -1
             isminor = 1 if rev.minor else 0
 
             if not rev.user or not rev.user.id: userid = -1
             else: userid = rev.user.id
-            # userid = rev.user.id if rev.user.id else -1 # TODO: faulty
+
+            try:
+                aux = mwparse(rev.text)
+                wikilinks1 = aux.filter_wikilinks()
+                extlinks1 = aux.filter_external_links()
+            except Exception as e: # Malformed Wikitext
+                row = [rev.id, rev.page.id, parid, rev.timestamp, userid, isminor]
+                # TODO: Write file containing the revid of the error
+                errrows.append(rev.id)
+                revrows.append(row)
+                continue
 
             # [revid, pageid, parentid, timestamp, userid, isminor]
             row = [rev.id, rev.page.id, parid, rev.timestamp, userid, isminor]
@@ -196,12 +201,12 @@ def process_dump(dumppath, outdir):
 
                 if len(wikilinks1) == 0:
                     idx = rev.text.find('#redirect') + 9 # len of #redirect
-                    link = remove_characters(rev.text[idx:].strip(), '[]')
+                    link = rev.text[idx:].strip('[]" ')
                 else:
-                    link = remove_characters(wikilinks1[0], '[]')
+                    link = wikilinks1[0].strip('[]" ')
 
-                link = strip_after_delim(link, delim='|')
-
+                link = link.split('|')[0]
+                if link[0] != '#': link = link.split('#')[0]
                 # [revid, tgt, isurl, isredirect]
                 linkrows.append([rev.id, link, 0, isredir])
                 continue
@@ -209,19 +214,25 @@ def process_dump(dumppath, outdir):
                 isredir = 0
 
             for l in wikilinks1:
-                link = remove_characters(l, '[]')
-                link = strip_after_delim(link, delim='|')
-                linkrows.append([rev.id, link, 0, isredir])
+                try:
+                    link = l.strip('[]" ')
+                    link = link.split('|')[0]
+                    if link[0] != '#': link = link.split('#')[0]
+                    linkrows.append([rev.id, link, 0, isredir])
+                except Exception as e: #Malformed link
+                    continue
 
             for l in extlinks1:
-                link = remove_characters(l, '[]')
-                link = strip_after_delim(link, delim=' ')
+                link = l.strip('[]" ')
+                link = link.split(' ')[0]
+                if link[0] != '#': link = link.split('#')[0]
                 linkrows.append([rev.id, link, 1, isredir])
 
         pd.DataFrame(linkrows).to_csv(linkpath1, index=False, header=False)
         pd.DataFrame(revrows).to_csv(revpath1, index=False, header=False)
+        pd.DataFrame(errrows).to_csv(errpath1, index=False, header=False)
 
-    cmd = "find '{}' -maxdepth 1 -type f -name '*_revs.csv' -print0 | sort -z | xargs -0 cat -- > '{}' && find '{}' -maxdepth 1 -type f -name '*_links.csv' -print0 | sort -z | xargs -0 cat -- > '{}' && rm -rf '{}'".format(tmpdir, revpath0, tmpdir, linkpath0, tmpdir)
+    cmd = "find '{}' -maxdepth 1 -type f -name '*_revs.csv' -print0 | sort -z | xargs -0 cat -- > '{}' && find '{}' -maxdepth 1 -type f -name '*_links.csv' -print0 | sort -z | xargs -0 cat -- > '{}' && find '{}' -maxdepth 1 -type f -name '*_reverr.csv' -print0 | sort -z | xargs -0 cat -- > '{}' && rm -rf '{}'".format(tmpdir, revpath0, tmpdir, linkpath0, tmpdir, errpath0, tmpdir)
     info('cmd:{}'.format(cmd))
     Popen(cmd, shell=True, stdout=DEVNULL, stderr=DEVNULL)
     pd.DataFrame(pageinfos).to_csv(pagepath0, index=False, header=False)
@@ -251,9 +262,12 @@ def parse_link(link):
 
     if True:
         for rev in page:
-            # TODO: check REDIRECT
-            print(rev.parent_id, rev.id, rev.text)
-            x = mwparse(rev.text)
+            try:
+                x = mwparse(rev.text)
+            except Exception as e:
+                # Malformed Wikitext
+                breakpoint()
+
             print(x.filter_wikilinks())
             wikilinks1 = x.filter_wikilinks()
             extlinks1 = x.filter_external_links()
