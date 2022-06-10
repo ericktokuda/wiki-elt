@@ -118,6 +118,8 @@ def strip_after_delim(txt, delim):
 
 ##########################################################
 def process_dump_protected(dumppath, outdir):
+    """Exception-protected processing.
+    Any unknown error is captured here and output to @outdir/errors.log."""
     try:
         process_dump(dumppath, outdir)
     except Exception as e:
@@ -126,13 +128,87 @@ def process_dump_protected(dumppath, outdir):
         open(errpath, 'a').write('{}\n{}\n{}\n'.format(dumppath, msg, SEP))
 
 ##########################################################
+def process_revision(rev):
+    """Short description """
+
+            # retrev, retlinks, reterr = process_revision(rev)
+    parid = rev.parent_id if rev.parent_id else -1
+    isminor = 1 if rev.minor else 0
+
+    if not rev.user or not rev.user.id: userid = -1
+    else: userid = rev.user.id
+
+    revrow = [rev.id, rev.page.id, parid, rev.timestamp, userid, isminor]
+    linkrows = []
+
+    try:
+        aux = mwparse(rev.text)
+        wikilinks = aux.filter_wikilinks()
+        extlinks = aux.filter_external_links()
+    except Exception as e: # Malformed Wikitext
+        # TODO: Write file containing the revid of the error
+        return revrow, linkrows, rev.id
+
+    # [revid, pageid, parentid, timestamp, userid, isminor]
+
+    if rev.text == None: # No content
+        return revrow, [], []
+    elif re.search('^\s*#redirect', rev.text.lower()):
+        # TODO: Refactor this part into a function
+        isredir = 1
+
+        if len(wikilinks) == 0:
+            idx = rev.text.find(redirkw) + len(redirkw)
+            link = rev.text[idx:].strip('[]" ')
+        else:
+            link = wikilinks[0].strip('[]" ')
+
+        link = link.split('|')[0]
+        if link[0] != '#': link = link.split('#')[0]
+        # [revid, tgt, isurl, isredirect]
+        linkrow = [rev.id, link, 0, isredir]
+        return revrow, [linkrow], []
+    else:
+        isredir = 0
+
+    for l in wikilinks:
+        try:
+            link = l.strip('[]" ')
+            link = link.split('|')[0]
+            if link[0] != '#': link = link.split('#')[0]
+            linkrows.append([rev.id, link, 0, isredir])
+        except Exception as e: #Malformed link
+            continue
+
+    for l in extlinks:
+        try:
+            link = l.strip('[]" ')
+            link = link.split(' ')[0]
+            if link[0] != '#': link = link.split('#')[0]
+            linkrows.append([rev.id, link, 1, isredir])
+        except Exception as e: #Malformed url
+            continue
+    return revrow, linkrows, []
+
+##########################################################
 def process_dump(dumppath, outdir):
+    """Process a dump file. Just accepts historical dumps in bz2 format"""
     fname = os.path.basename(dumppath)
-    suff = fname.replace('.bz2', '').split('.xml-')[1]
-    info('Dump {}'.format(suff))
-    tokens = suff.split('p')
-    id0 = int(tokens[1]); id1 = int(tokens[2])
-    nexppages = id1 - id0 + 1 # Expected num of pages
+
+    if (not fname.endswith('.bz2')) or (not 'history' in fname):
+        return
+
+    aux = fname.replace('.bz2', '')
+
+    if '.xml-' in aux:
+        suff = aux.split('.xml-')[1]
+        aux = suff.split('p')
+        aux = int(aux[2]) - int(aux[1])
+    else:
+        suff = 'p0p0'
+        aux = 'all'
+
+    info('{} ({} pages)'.format(suff, aux))
 
     stdout = subprocess.Popen(['bzcat'], stdin=open(dumppath),
                              stdout=subprocess.PIPE).stdout
@@ -151,15 +227,15 @@ def process_dump(dumppath, outdir):
 
     tmpdir = pjoin(outdir, suff)
     if os.path.isdir(tmpdir):
-        info('Had started {}'.format(suff))
+        info('Continuing previous run {}'.format(suff))
     else:
-        os.makedirs(tmpdir) # Start processing
+        os.makedirs(tmpdir)
+        info('Started running {}'.format(suff))
 
     for i, page in enumerate(dump):
         info('Pageid {}'.format(page.id))
         # if i > 3: break # For debugging
         if not page.namespace in ns_ids: continue
-
         isredir = 1 if page.redirect else 0
         pageinfos.append([page.id, page.title, page.namespace, isredir])
 
@@ -169,70 +245,24 @@ def process_dump(dumppath, outdir):
 
         if os.path.isfile(revpath1): continue
 
-        linkrows = []
         revrows = []
+        linkrows = []
         errrows = []
         for rev in page:
-            parid = rev.parent_id if rev.parent_id else -1
-            isminor = 1 if rev.minor else 0
-
-            if not rev.user or not rev.user.id: userid = -1
-            else: userid = rev.user.id
-
-            try:
-                aux = mwparse(rev.text)
-                wikilinks1 = aux.filter_wikilinks()
-                extlinks1 = aux.filter_external_links()
-            except Exception as e: # Malformed Wikitext
-                row = [rev.id, rev.page.id, parid, rev.timestamp, userid, isminor]
-                # TODO: Write file containing the revid of the error
-                errrows.append(rev.id)
-                revrows.append(row)
-                continue
-
-            # [revid, pageid, parentid, timestamp, userid, isminor]
-            row = [rev.id, rev.page.id, parid, rev.timestamp, userid, isminor]
-            revrows.append(row)
-
-            if rev.text == None: # No content
-                continue
-            elif re.search('^\s*#redirect', rev.text.lower()):
-                isredir = 1
-
-                if len(wikilinks1) == 0:
-                    idx = rev.text.find('#redirect') + 9 # len of #redirect
-                    link = rev.text[idx:].strip('[]" ')
-                else:
-                    link = wikilinks1[0].strip('[]" ')
-
-                link = link.split('|')[0]
-                if link[0] != '#': link = link.split('#')[0]
-                # [revid, tgt, isurl, isredirect]
-                linkrows.append([rev.id, link, 0, isredir])
-                continue
-            else:
-                isredir = 0
-
-            for l in wikilinks1:
-                try:
-                    link = l.strip('[]" ')
-                    link = link.split('|')[0]
-                    if link[0] != '#': link = link.split('#')[0]
-                    linkrows.append([rev.id, link, 0, isredir])
-                except Exception as e: #Malformed link
-                    continue
-
-            for l in extlinks1:
-                link = l.strip('[]" ')
-                link = link.split(' ')[0]
-                if link[0] != '#': link = link.split('#')[0]
-                linkrows.append([rev.id, link, 1, isredir])
+            revinfo, revlinks, reverr = process_revision(rev)
+            revrows.append(revinfo)
+            linkrows.extend(revlinks)
+            errrows.extend(reverr)
 
         pd.DataFrame(linkrows).to_csv(linkpath1, index=False, header=False)
         pd.DataFrame(revrows).to_csv(revpath1, index=False, header=False)
         pd.DataFrame(errrows).to_csv(errpath1, index=False, header=False)
 
-    cmd = "find '{}' -maxdepth 1 -type f -name '*_revs.csv' -print0 | sort -z | xargs -0 cat -- > '{}' && find '{}' -maxdepth 1 -type f -name '*_links.csv' -print0 | sort -z | xargs -0 cat -- > '{}' && find '{}' -maxdepth 1 -type f -name '*_reverr.csv' -print0 | sort -z | xargs -0 cat -- > '{}' && rm -rf '{}'".format(tmpdir, revpath0, tmpdir, linkpath0, tmpdir, errpath0, tmpdir)
+    cmd1 = '''find '{}' -maxdepth 1 -type f -name '*_revs.csv' -print0 | sort -z | xargs -0 cat -- > '{}' '''.format(tmpdir, revpath0)
+    cmd2 = '''find '{}' -maxdepth 1 -type f -name '*_links.csv' -print0 | sort -z | xargs -0 cat -- > '{}' '''.format(tmpdir, linkpath0)
+    cmd3 = '''find '{}' -maxdepth 1 -type f -name '*_reverr.csv' -print0 | sort -z | xargs -0 cat -- > '{}' '''.format(tmpdir, linkpath0)
+    cmd4 = ''' rm -rf '{}' '''.format(tmpdir)
+    cmd = '&&'.join([cmd1, cmd2, cmd3, cmd4])
     info('cmd:{}'.format(cmd))
     Popen(cmd, shell=True, stdout=DEVNULL, stderr=DEVNULL)
     pd.DataFrame(pageinfos).to_csv(pagepath0, index=False, header=False)
@@ -318,26 +348,27 @@ def process_dumps(dumpsdir, nprocs, outdir):
     dumppaths = []
     langs = set(); dumpdts = set(); dumpgrs = set()
     for f in os.listdir(dumpsdir):
-        if not '-pages-meta-history' or not f.endswith('.bz2'):
-            continue
-        p1, p2 = f.replace('.bz2', '').split('.xml-')
+        # if (not '-pages-meta-history' in f) or (not f.endswith('.bz2')):
+            # continue
+        # p1, p2 = f.replace('.bz2', '').split('.xml-')
 
-        langs.add(p1.split('wiki')[0])
-        dumpdts.add(p1.split('-')[1])
-        dumpgrs.add(int(p1.split('history')[1])) # Dump group (machine in the cluster)
+        # langs.add(p1.split('wiki')[0])
+        # dumpdts.add(p1.split('-')[1])
+        # dumpgrs.add(int(p1.split('history')[1])) # Dump group (machine in the cluster)
         dumppaths.append(pjoin(dumpsdir, f))
 
-    if len(langs) > 1 or len(dumpdts) > 1 or len(dumpgrs) < max(dumpgrs):
-        info('Inconsistency in name os the dumps.')
-        info('langs:{}, dumpdts:{}, dumpgrs:{}'.format(langs, dumpdts, dumpgrs))
-        info('Aborting...')
-        return
+    # if len(langs) > 1 or len(dumpdts) > 1 or len(dumpgrs) < max(dumpgrs):
+        # info('Inconsistency in name os the dumps.')
+        # info('langs:{}, dumpdts:{}, dumpgrs:{}'.format(langs, dumpdts, dumpgrs))
+        # info('Aborting...')
+        # return
 
     dumppaths = sorted(dumppaths)
-    lang = list(langs)[0]; dumpdt = list(dumpdts)[0]
+    # lang = list(langs)[0]; dumpdt = list(dumpdts)[0]
 
     if nprocs == 1:
-        [ process_dump_protected(p, outdir) for p in dumppaths ]
+        # [ process_dump_protected(p, outdir) for p in dumppaths ]
+        [ process_dump(p, outdir) for p in dumppaths ]
     else:
         fargs = [ [p, outdir] for p in dumppaths ]
         with Pool(processes=nprocs) as pool:
