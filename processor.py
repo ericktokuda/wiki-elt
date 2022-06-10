@@ -110,11 +110,7 @@ def classify_wikilinks(links):
         breakpoint()
 
 ##########################################################
-def strip_after_delim(txt, delim):
-    idx = txt.find(delim)
-    if idx >= 0: txt = txt[:idx]
-    return txt
-
+def simplify_tag(tag): return tag.replace('\t', ' ').strip('[]" ')
 
 ##########################################################
 def process_dump_protected(dumppath, outdir):
@@ -159,9 +155,9 @@ def process_revision(rev):
 
         if len(wikilinks) == 0:
             idx = rev.text.find(redirkw) + len(redirkw)
-            link = rev.text[idx:].strip('[]" ')
+            link = simplify_tag(rev.text[idx:])
         else:
-            link = wikilinks[0].strip('[]" ')
+            link = simplify_tag(wikilinks[0])
 
         link = link.split('|')[0]
         if link[0] != '#': link = link.split('#')[0]
@@ -173,7 +169,7 @@ def process_revision(rev):
 
     for l in wikilinks:
         try:
-            link = l.strip('[]" ')
+            link = simplify_tag(l)
             link = link.split('|')[0]
             if link[0] != '#': link = link.split('#')[0]
             linkrows.append([rev.id, link, 0, isredir])
@@ -182,7 +178,7 @@ def process_revision(rev):
 
     for l in extlinks:
         try:
-            link = l.strip('[]" ')
+            link = simplify_tag(l)
             link = link.split(' ')[0]
             if link[0] != '#': link = link.split('#')[0]
             linkrows.append([rev.id, link, 1, isredir])
@@ -254,9 +250,9 @@ def process_dump(dumppath, outdir):
             linkrows.extend(revlinks)
             errrows.extend(reverr)
 
-        pd.DataFrame(linkrows).to_csv(linkpath1, index=False, header=False)
-        pd.DataFrame(revrows).to_csv(revpath1, index=False, header=False)
-        pd.DataFrame(errrows).to_csv(errpath1, index=False, header=False)
+        pd.DataFrame(linkrows).to_csv(linkpath1, sep='\t', index=False, header=False)
+        pd.DataFrame(revrows).to_csv(revpath1, sep='\t', index=False, header=False)
+        pd.DataFrame(errrows).to_csv(errpath1, sep='\t', index=False, header=False)
 
     cmd1 = '''find '{}' -maxdepth 1 -type f -name '*_revs.csv' -print0 | sort -z | xargs -0 cat -- > '{}' '''.format(tmpdir, revpath0)
     cmd2 = '''find '{}' -maxdepth 1 -type f -name '*_links.csv' -print0 | sort -z | xargs -0 cat -- > '{}' '''.format(tmpdir, linkpath0)
@@ -265,7 +261,7 @@ def process_dump(dumppath, outdir):
     cmd = '&&'.join([cmd1, cmd2, cmd3, cmd4])
     info('cmd:{}'.format(cmd))
     Popen(cmd, shell=True, stdout=DEVNULL, stderr=DEVNULL)
-    pd.DataFrame(pageinfos).to_csv(pagepath0, index=False, header=False)
+    pd.DataFrame(pageinfos).to_csv(pagepath0, sep='\t', index=False, header=False)
     info('Finished {}'.format(suff))
 
 ##########################################################
@@ -313,7 +309,7 @@ def parse_link(link):
     # TODO: Need to generate revpath and linkpath
 
     # Last thing to be done
-    pd.DataFrame(pageinfos).to_csv(pagepath, index=False, header=False)
+    pd.DataFrame(pageinfos).to_csv(pagepath, sep='\t', index=False, header=False)
     return
 
 
