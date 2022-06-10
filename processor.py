@@ -209,10 +209,10 @@ def process_dump(dumppath, outdir):
     stdout = subprocess.Popen(['bzcat'], stdin=open(dumppath),
                              stdout=subprocess.PIPE).stdout
 
-    pagepath0 = pjoin(outdir, suff + '_pages.csv')
-    revpath0 = pjoin(outdir, suff + '_revs.csv')
-    errpath0 = pjoin(outdir, suff + '_reverr.csv')
-    linkpath0 = pjoin(outdir, suff + '_links.csv')
+    pagepath0 = pjoin(outdir, suff + '_pages.tsv')
+    revpath0 = pjoin(outdir, suff + '_revs.tsv')
+    errpath0 = pjoin(outdir, suff + '_reverr.tsv')
+    linkpath0 = pjoin(outdir, suff + '_links.tsv')
 
     if os.path.isfile(pagepath0): return # Already processed dump
 
@@ -235,9 +235,9 @@ def process_dump(dumppath, outdir):
         isredir = 1 if page.redirect else 0
         pageinfos.append([page.id, page.title, page.namespace, isredir])
 
-        linkpath1 = pjoin(outdir, tmpdir, '{:08d}_links.csv'.format(page.id))
-        revpath1 = pjoin(outdir, tmpdir, '{:08d}_revs.csv'.format(page.id))
-        errpath1 = pjoin(outdir, tmpdir, '{:08d}_reverr.csv'.format(page.id))
+        linkpath1 = pjoin(outdir, tmpdir, '{:08d}_links.tsv'.format(page.id))
+        revpath1 = pjoin(outdir, tmpdir, '{:08d}_revs.tsv'.format(page.id))
+        errpath1 = pjoin(outdir, tmpdir, '{:08d}_reverr.tsv'.format(page.id))
 
         if os.path.isfile(revpath1): continue
 
@@ -254,9 +254,9 @@ def process_dump(dumppath, outdir):
         pd.DataFrame(revrows).to_csv(revpath1, sep='\t', index=False, header=False)
         pd.DataFrame(errrows).to_csv(errpath1, sep='\t', index=False, header=False)
 
-    cmd1 = '''find '{}' -maxdepth 1 -type f -name '*_revs.csv' -print0 | sort -z | xargs -0 cat -- > '{}' '''.format(tmpdir, revpath0)
-    cmd2 = '''find '{}' -maxdepth 1 -type f -name '*_links.csv' -print0 | sort -z | xargs -0 cat -- > '{}' '''.format(tmpdir, linkpath0)
-    cmd3 = '''find '{}' -maxdepth 1 -type f -name '*_reverr.csv' -print0 | sort -z | xargs -0 cat -- > '{}' '''.format(tmpdir, linkpath0)
+    cmd1 = '''find '{}' -maxdepth 1 -type f -name '*_revs.tsv' -print0 | sort -z | xargs -0 cat -- > '{}' '''.format(tmpdir, revpath0)
+    cmd2 = '''find '{}' -maxdepth 1 -type f -name '*_links.tsv' -print0 | sort -z | xargs -0 cat -- > '{}' '''.format(tmpdir, linkpath0)
+    cmd3 = '''find '{}' -maxdepth 1 -type f -name '*_reverr.tsv' -print0 | sort -z | xargs -0 cat -- > '{}' '''.format(tmpdir, linkpath0)
     cmd4 = ''' rm -rf '{}' '''.format(tmpdir)
     cmd = '&&'.join([cmd1, cmd2, cmd3, cmd4])
     info('cmd:{}'.format(cmd))
