@@ -164,7 +164,7 @@ def process_revision(rev):
     linkrows = []
     for l in wikilinks:
         try:
-            link = remove_section(simplify_tag(link, '|'))
+            link = remove_section(simplify_tag(l, '|'))
             if link == '': link = rev.page.title # Self-loop
             linkrows.append([rev.id, link, 0, 0])
         except Exception as e: #Malformed link
@@ -173,9 +173,10 @@ def process_revision(rev):
     for l in extlinks:
         try:
             link = simplify_tag(l, ' ')
-            linkrows.append([rev.id, link, 1, isredir])
+            linkrows.append([rev.id, link, 1, 0])
         except Exception as e: #Malformed url
             continue
+
     return revrow, linkrows, True
 
 ##########################################################
@@ -222,13 +223,13 @@ def process_dump(dumppath, outdir):
 
     for i, page in enumerate(dump):
         info('Pageid {}'.format(page.id))
-        if i > 3: break # For debugging
+        # if i > 3: break # For debugging
         if not page.namespace in ns_ids: continue
         isredir = 1 if page.redirect else 0
         pageinfos.append([page.id, page.title, page.namespace, isredir])
 
-        linkpath1 = pjoin(outdir, tmpdir, '{:08d}_links.tsv'.format(page.id))
         revpath1 = pjoin(outdir, tmpdir, '{:08d}_revs.tsv'.format(page.id))
+        linkpath1 = pjoin(outdir, tmpdir, '{:08d}_links.tsv'.format(page.id))
         errpath1 = pjoin(outdir, tmpdir, '{:08d}_reverr.tsv'.format(page.id))
 
         if os.path.isfile(revpath1): continue
@@ -242,15 +243,15 @@ def process_dump(dumppath, outdir):
             linkrows.extend(revlinks)
             if not succ: errrows.append(rev.id)
 
-        pd.DataFrame(linkrows).to_csv(linkpath1, sep='\t', index=False, header=False)
         pd.DataFrame(revrows).to_csv(revpath1, sep='\t', index=False, header=False)
+        pd.DataFrame(linkrows).to_csv(linkpath1, sep='\t', index=False, header=False)
         pd.DataFrame(errrows).to_csv(errpath1, sep='\t', index=False, header=False)
 
     cmd1 = '''find '{}' -maxdepth 1 -type f -name '*_revs.tsv' -print0 | sort -z | xargs -0 cat -- > '{}' '''.format(tmpdir, revpath0)
     cmd2 = '''find '{}' -maxdepth 1 -type f -name '*_links.tsv' -print0 | sort -z | xargs -0 cat -- > '{}' '''.format(tmpdir, linkpath0)
     cmd3 = '''find '{}' -maxdepth 1 -type f -name '*_reverr.tsv' -print0 | sort -z | xargs -0 cat -- > '{}' '''.format(tmpdir, errpath0)
     cmd4 = ''' rm -rf '{}' '''.format(tmpdir)
-    cmd = '&&'.join([cmd1, cmd2, cmd3, cmd4])
+    cmd = ' && '.join([cmd1, cmd2, cmd3, cmd4])
     info('cmd:{}'.format(cmd))
     Popen(cmd, shell=True, stdout=DEVNULL, stderr=DEVNULL)
     pd.DataFrame(pageinfos).to_csv(pagepath0, sep='\t', index=False, header=False)
