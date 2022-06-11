@@ -55,7 +55,7 @@ ns_vrt = ['Special', 'Media'] # Virtual
 ns_vrta = ['Image', 'File']
 wikins = ns_sbj + ns_sbja + ns_tk + ns_tka + ns_vrt + ns_vrta
 
-redirkw = '#redirect' # Not case sensitive
+redirlowerkw = '#redirect' # Not case sensitive
 
 ##########################################################
 def classify_wikilinks(links):
@@ -109,8 +109,9 @@ def classify_wikilinks(links):
 
         breakpoint()
 
-##########################################################
-def simplify_tag(tag): return tag.replace('\t', ' ').strip('[]" ')
+def simplify_tag(tag, sep):
+    return tag.replace('\t', ' ').strip('[]" ').split(sep)[0].strip()
+def remove_section(link): return link.split('#')[0]
 
 ##########################################################
 def process_dump_protected(dumppath, outdir):
@@ -124,67 +125,58 @@ def process_dump_protected(dumppath, outdir):
         open(errpath, 'a').write('{}\n{}\n{}\n'.format(dumppath, msg, SEP))
 
 ##########################################################
-def process_revision(rev):
-    """Short description """
+def is_redirect(txt, redirlowerkw):
+    return True if re.search('^\s*' + re.escape(redirlowerkw), txt) else False
 
-            # retrev, retlinks, reterr = process_revision(rev)
+##########################################################
+def process_revision(rev):
+    """Process a mwxml revision. Returns the information of the revision, the links,
+    and whether the revision the link errors.
+    Return:
+    revision: [revid, pageid, parentid, timestamp, userid, isminor]
+    links: list of list [revid, link, isurl, isredirlink]
+    succ: whether the execution was successfull
+    """
+
     parid = rev.parent_id if rev.parent_id else -1
+    userid = -1 if ((not rev.user) or (not rev.user.id)) else rev.user.id
     isminor = 1 if rev.minor else 0
 
-    if not rev.user or not rev.user.id: userid = -1
-    else: userid = rev.user.id
-
     revrow = [rev.id, rev.page.id, parid, rev.timestamp, userid, isminor]
-    linkrows = []
+
+    if rev.text == None: return revrow, [], True # No content
 
     try:
         aux = mwparse(rev.text)
         wikilinks = aux.filter_wikilinks()
         extlinks = aux.filter_external_links()
-    except Exception as e: # Malformed Wikitext
-        # TODO: Write file containing the revid of the error
-        return revrow, linkrows, rev.id
+    except Exception as e: # Malformed Wikitext. Disregard this content
+        return revrow, [], False
 
-    # [revid, pageid, parentid, timestamp, userid, isminor]
+    if is_redirect(rev.text, redirlowerkw): # Assume redirect link is not a url
+        if len(wikilinks) == 0: return revrow, [], False
+        link = remove_section(simplify_tag(wikilinks[0], '|'))
+        if link == '':
+            return revrow, [], False
+        linkrows = [[rev.id, link, 0, 1]]
+        return revrow, linkrows, True
 
-    if rev.text == None: # No content
-        return revrow, [], []
-    elif re.search('^\s*#redirect', rev.text.lower()):
-        # TODO: Refactor this part into a function
-        isredir = 1
-
-        if len(wikilinks) == 0:
-            idx = rev.text.find(redirkw) + len(redirkw)
-            link = simplify_tag(rev.text[idx:])
-        else:
-            link = simplify_tag(wikilinks[0])
-
-        link = link.split('|')[0]
-        if link[0] != '#': link = link.split('#')[0]
-        # [revid, tgt, isurl, isredirect]
-        linkrow = [rev.id, link, 0, isredir]
-        return revrow, [linkrow], []
-    else:
-        isredir = 0
-
+    linkrows = []
     for l in wikilinks:
         try:
-            link = simplify_tag(l)
-            link = link.split('|')[0]
-            if link[0] != '#': link = link.split('#')[0]
-            linkrows.append([rev.id, link, 0, isredir])
+            link = remove_section(simplify_tag(link, '|'))
+            if link == '': link = rev.page.title # Self-loop
+            linkrows.append([rev.id, link, 0, 0])
         except Exception as e: #Malformed link
             continue
 
     for l in extlinks:
         try:
-            link = simplify_tag(l)
-            link = link.split(' ')[0]
-            if link[0] != '#': link = link.split('#')[0]
+            link = simplify_tag(l, ' ')
             linkrows.append([rev.id, link, 1, isredir])
         except Exception as e: #Malformed url
             continue
-    return revrow, linkrows, []
+    return revrow, linkrows, True
 
 ##########################################################
 def process_dump(dumppath, outdir):
@@ -230,7 +222,7 @@ def process_dump(dumppath, outdir):
 
     for i, page in enumerate(dump):
         info('Pageid {}'.format(page.id))
-        # if i > 3: break # For debugging
+        if i > 3: break # For debugging
         if not page.namespace in ns_ids: continue
         isredir = 1 if page.redirect else 0
         pageinfos.append([page.id, page.title, page.namespace, isredir])
@@ -245,10 +237,10 @@ def process_dump(dumppath, outdir):
         linkrows = []
         errrows = []
         for rev in page:
-            revinfo, revlinks, reverr = process_revision(rev)
+            revinfo, revlinks, succ = process_revision(rev)
             revrows.append(revinfo)
             linkrows.extend(revlinks)
-            errrows.extend(reverr)
+            if not succ: errrows.append(rev.id)
 
         pd.DataFrame(linkrows).to_csv(linkpath1, sep='\t', index=False, header=False)
         pd.DataFrame(revrows).to_csv(revpath1, sep='\t', index=False, header=False)
@@ -256,7 +248,7 @@ def process_dump(dumppath, outdir):
 
     cmd1 = '''find '{}' -maxdepth 1 -type f -name '*_revs.tsv' -print0 | sort -z | xargs -0 cat -- > '{}' '''.format(tmpdir, revpath0)
     cmd2 = '''find '{}' -maxdepth 1 -type f -name '*_links.tsv' -print0 | sort -z | xargs -0 cat -- > '{}' '''.format(tmpdir, linkpath0)
-    cmd3 = '''find '{}' -maxdepth 1 -type f -name '*_reverr.tsv' -print0 | sort -z | xargs -0 cat -- > '{}' '''.format(tmpdir, linkpath0)
+    cmd3 = '''find '{}' -maxdepth 1 -type f -name '*_reverr.tsv' -print0 | sort -z | xargs -0 cat -- > '{}' '''.format(tmpdir, errpath0)
     cmd4 = ''' rm -rf '{}' '''.format(tmpdir)
     cmd = '&&'.join([cmd1, cmd2, cmd3, cmd4])
     info('cmd:{}'.format(cmd))
