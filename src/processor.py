@@ -44,7 +44,8 @@ class Wikitype:
 
 # Source: https://en.wikipedia.org/wiki/Wikipedia:Namespace
 # Non-talk and non-deprecated namespace ids
-ns_ids = [0, 2, 4, 6, 8, 10, 12, 14, 100, 118, 710, 828, -1, -2]
+# ns_ids = [0, 2, 4, 6, 8, 10, 12, 14, 100, 118, 710, 828, -1, -2]
+mainns = [0]
 ns_sbj = ['Main', 'Article', 'User', 'Wikipedia', 'File', # Subject
         'MediaWiki' 'Template', 'Help', 'Category', 'Portal',
         'Draft', 'TimedText', 'Module', 'Gadget', 'Gadget definition']
@@ -224,7 +225,7 @@ def process_dump(dumppath, outdir):
     for i, page in enumerate(dump):
         info('Pageid {}'.format(page.id))
         # if i > 3: break # For debugging
-        if not page.namespace in ns_ids: continue
+        if not page.namespace in mainns: continue
         isredir = 1 if page.redirect else 0
         pageinfos.append([page.id, page.title, page.namespace, isredir])
 
