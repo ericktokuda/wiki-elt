@@ -184,7 +184,7 @@ def get_adj_titles(linkstsv, pagetsv, adtitlespath, iderrspath):
     info(joineddf.count())
 
     joineddf.rename(columns={'title':'srctitle'}, inplace=True)
-    joineddf.loc[joineddf.tgtid.notnull()]. \
+    joineddf.loc[joineddf.tgttitle.notnull()]. \
         to_csv(adjtitlespath, columns=['srctitle', 'tgttitle'], index=False, sep='\t')
 
     joineddf.loc[joineddf.tgttitle.isnull()]. \
@@ -225,7 +225,7 @@ if __name__ == "__main__":
 
     adjidspath = pjoin(args.outdir, '{}adjids.csv'.format(suff))
     titleerrspath = pjoin(args.outdir, '{}titleerrs.csv'.format(suff))
-    # get_adj_ids(linkstsv, pagetsv, adjidspath, titleerrspath)
+    get_adj_ids(linkstsv, pagetsv, adjidspath, titleerrspath)
     adjtitlespath = pjoin(args.outdir, '{}adjtitles.csv'.format(suff))
     iderrspath = pjoin(args.outdir, '{}iderrs.csv'.format(suff))
     get_adj_titles(linkstsv, pagetsv, adjtitlespath, iderrspath)
