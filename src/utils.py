@@ -163,15 +163,16 @@ def get_adj_ids(linkstsv, pagetsv, adjidspath, titleerrspath):
     pagedf = pd.read_csv(pagetsv, sep='\t')
 
     joineddf = linkdf.set_index('tgttitle').join(pagedf.set_index('title'), how='left')
-    info(joineddf.count())
 
     joineddf = joineddf.reset_index()
     joineddf.rename(columns={'index':'tgttitle', 'pid':'tgtid'}, inplace=True)
     joineddf.loc[joineddf.tgtid.notnull()]. \
         to_csv(adjidspath, columns=['srcid', 'tgtid'], index=False, sep='\t')
 
-    joineddf.loc[joineddf.tgtid.isnull()]. \
-        to_csv(titleerrspath, columns=['tgttitle'], header=['title'], index=False, sep='\t')
+    joineddf = joineddf.loc[joineddf.tgtid.isnull()]
+    info('Titles with missing (or invalid) ids: {}'.format(len(joineddf)))
+    joineddf.to_csv(titleerrspath, columns=['tgttitle'], header=['title'],
+                    index=False, sep='\t')
 
 ##########################################################
 def get_adj_titles(linkstsv, pagetsv, adtitlespath, iderrspath):
@@ -181,16 +182,14 @@ def get_adj_titles(linkstsv, pagetsv, adtitlespath, iderrspath):
     pagedf = pd.read_csv(pagetsv, sep='\t')
 
     joineddf = linkdf.set_index('srcid').join(pagedf.set_index('pid'), how='left')
-    info(joineddf.count())
 
     joineddf.rename(columns={'title':'srctitle'}, inplace=True)
     joineddf.loc[joineddf.tgttitle.notnull()]. \
         to_csv(adjtitlespath, columns=['srctitle', 'tgttitle'], index=False, sep='\t')
 
-    joineddf.loc[joineddf.tgttitle.isnull()]. \
-        to_csv(iderrspath, columns=['tgttitle'], header=['title'], index=False, sep='\t')
-    joineddf.loc[joineddf.tgttitle.isnull()]. \
-        to_csv(iderrspath, columns=[], sep='\t', index=True, index_label='srcid')
+    joineddf = joineddf.loc[joineddf.tgttitle.isnull()]
+    info('Ids with missing (or invalid) titles: {}'.format(len(joineddf)))
+    joineddf.to_csv(iderrspath, columns=[], sep='\t', index=True, index_label='srcid')
 
 ##########################################################
 if __name__ == "__main__":
