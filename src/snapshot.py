@@ -80,6 +80,18 @@ def sql_to_csv(sqlpath, outpath):
     sqlfh.close()
 
 ##########################################################
+def clean_text(txt, mostlyorig=True):
+    """Process the title coming from the sql file. If @mostlyorig, just the
+    surrounding quotes and space are removed. Else most of the uncommon
+    characters are removed."""
+    if mostlyorig:
+        return txt.strip(" '")
+    else:
+        for c in u'\\"\'`‘’\ufeff':
+            txt = txt.replace(c, '')
+        return txt.strip()
+
+##########################################################
 def parse_csv_pagelinks(csvpath, outpath):
     """Parse csv file and output to @outpath.
     Table Pagelinks contains 4 fields: srcid, tgtns, tgttitle, srcns
@@ -95,23 +107,25 @@ def parse_csv_pagelinks(csvpath, outpath):
     rows = []
     for i, l in enumerate(fh):
         els = l.split(',')
-        middleels = els[2:-1]
+        titleels = els[2:-1]
 
         nssrc = els[-1].strip()
         nstgt = els[1]
 
         if (not nssrc == '0') or (not nstgt == '0'): continue
 
-        aux1 = []
-        for el in middleels:
-            aux2 = el
+        title = clean_text(','.join(titleels), mostlyorig=True)
+
+        # aux1 = []
+        # for el in titleels:
+            # aux2 = el
             # for c in u'\\"\'`‘’\ufeff':
                 # aux2 = aux2.replace(c, '')
             # aux1.append(aux2.strip())
-            aux1.append(aux2.strip(" '"))
+            # aux1.append(aux2.strip(" '"))
 
-        middlestr = ','.join(aux1)
-        row = [els[0], middlestr]
+        # middlestr = ','.join(aux1)
+        row = [els[0], title]
         rows.append(row)
 
     df = pd.DataFrame(rows, columns=['srcid', 'tgttitle'])
@@ -141,16 +155,8 @@ def parse_csv_page(csvpath, outpath):
         if not ns == '0': continue
 
         isredir, isnew, latest = els[-9], els[-8], els[-4]
-        aux1 = []
-        for el in titleels:
-            aux2 = el
-            # for c in u'\\"\'`‘’\ufeff':
-                # aux2 = aux2.replace(c, '')
-            # aux1.append(aux2)
-            aux1.append(aux2.strip(" '"))
-
-        titlestr = ','.join(aux1)
-        row = [pid, titlestr, isredir, latest]
+        title = clean_text(','.join(titleels), mostlyorig=True)
+        row = [pid, title, isredir, latest]
         rows.append(row)
 
     df = pd.DataFrame(rows, columns=['pid', 'title', 'isredir', 'latrev'])
@@ -203,7 +209,7 @@ def get_adj_titles(linkstsv, pagetsv, adtitlespath, iderrspath):
     errids = joineddf.loc[joineddf.tgttitle.isnull()].index
     errids = errids.to_numpy(dtype='int').astype(str)
     info('Ids with missing (or invalid) titles: {}'.format(len(errids)))
-    open(titleerrspath, 'w').write('\n'.join(errids))
+    open(iderrspath, 'w').write('\n'.join(errids))
 
 ##########################################################
 if __name__ == "__main__":
