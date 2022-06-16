@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 from myutils import info, create_readme
 
 from downloader import download_dumps
-from processor import process_dumps
+from dump import process_dumps
 import bz2
 import subprocess
 

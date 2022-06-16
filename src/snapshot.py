@@ -105,9 +105,10 @@ def parse_csv_pagelinks(csvpath, outpath):
         aux1 = []
         for el in middleels:
             aux2 = el
-            for c in u'\\"\'`‘’\ufeff':
-                aux2 = aux2.replace(c, '')
-            aux1.append(aux2.strip())
+            # for c in u'\\"\'`‘’\ufeff':
+                # aux2 = aux2.replace(c, '')
+            # aux1.append(aux2.strip())
+            aux1.append(aux2.strip(" '"))
 
         middlestr = ','.join(aux1)
         row = [els[0], middlestr]
@@ -143,9 +144,10 @@ def parse_csv_page(csvpath, outpath):
         aux1 = []
         for el in titleels:
             aux2 = el
-            for c in u'\\"\'`‘’\ufeff':
-                aux2 = aux2.replace(c, '')
-            aux1.append(aux2)
+            # for c in u'\\"\'`‘’\ufeff':
+                # aux2 = aux2.replace(c, '')
+            # aux1.append(aux2)
+            aux1.append(aux2.strip(" '"))
 
         titlestr = ','.join(aux1)
         row = [pid, titlestr, isredir, latest]
