@@ -30,7 +30,7 @@ def sqlgz_to_csv(dumppath, outpath):
 
     # DOING THIS WAY IT IS GENERATING WEIRD CHARACTERS (MAYBE RELATED TO ENCODING)
     if os.path.isfile(outpath):
-        info('FILE {} ALREADY EXISTS!\nABORTING...'.format(outpath))
+        info('FILE {} ALREADY EXISTS! ABORTING...'.format(outpath))
         return
 
     fh = open(outpath, 'w')
@@ -57,7 +57,7 @@ def sql_to_csv(sqlpath, outpath):
     info(inspect.stack()[0][3] + '()')
 
     if os.path.isfile(outpath):
-        info('FILE {} ALREADY EXISTS!\nABORTING...'.format(outpath))
+        info('FILE {} ALREADY EXISTS! ABORTING...'.format(outpath))
         return
 
     sqlfh = open(sqlpath, 'r')
@@ -87,7 +87,7 @@ def parse_csv_pagelinks(csvpath, outpath):
     info(inspect.stack()[0][3] + '()')
 
     if os.path.isfile(outpath):
-        info('FILE {} ALREADY EXISTS!\nABORTING...'.format(outpath))
+        info('FILE {} ALREADY EXISTS! ABORTING...'.format(outpath))
         return
 
     fh = open(csvpath)
@@ -126,7 +126,7 @@ def parse_csv_page(csvpath, outpath):
     info(inspect.stack()[0][3] + '()')
 
     if os.path.isfile(outpath):
-        info('FILE {} ALREADY EXISTS!\nABORTING...'.format(outpath))
+        info('FILE {} ALREADY EXISTS! ABORTING...'.format(outpath))
         return
 
     fh = open(csvpath)
@@ -157,8 +157,13 @@ def parse_csv_page(csvpath, outpath):
 
 ##########################################################
 def get_adj_ids(linkstsv, pagetsv, adjidspath, titleerrspath):
-    """Short description """
+    """Get adjacency list using ids"""
     info(inspect.stack()[0][3] + '()')
+
+    if os.path.isfile(adjidspath):
+        info('FILE {} ALREADY EXISTS! ABORTING...'.format(adjidspath))
+        return
+
     linkdf = pd.read_csv(linkstsv, sep='\t')
     pagedf = pd.read_csv(pagetsv, sep='\t')
 
@@ -167,17 +172,23 @@ def get_adj_ids(linkstsv, pagetsv, adjidspath, titleerrspath):
     joineddf = joineddf.reset_index()
     joineddf.rename(columns={'index':'tgttitle', 'pid':'tgtid'}, inplace=True)
     joineddf.loc[joineddf.tgtid.notnull()]. \
-        to_csv(adjidspath, columns=['srcid', 'tgtid'], index=False, sep='\t')
+        to_csv(adjidspath, columns=['srcid', 'tgtid'], index=False,
+               sep='\t', float_format='%.0f')
 
-    joineddf = joineddf.loc[joineddf.tgtid.isnull()]
-    info('Titles with missing (or invalid) ids: {}'.format(len(joineddf)))
-    joineddf.to_csv(titleerrspath, columns=['tgttitle'], header=['title'],
-                    index=False, sep='\t')
+    errtitles = joineddf.loc[joineddf.tgtid.isnull()].tgttitle
+    errtitles = errtitles.to_numpy(dtype='str')
+    info('Titles with missing (or invalid) ids: {}'.format(len(errtitles)))
+    open(titleerrspath, 'w').write('\n'.join(errtitles))
 
 ##########################################################
 def get_adj_titles(linkstsv, pagetsv, adtitlespath, iderrspath):
-    """Short description """
+    """Get adjacency list using titles"""
     info(inspect.stack()[0][3] + '()')
+
+    if os.path.isfile(adjtitlespath):
+        info('FILE {} ALREADY EXISTS! ABORTING...'.format(adjtitlespath))
+        return
+
     linkdf = pd.read_csv(linkstsv, sep='\t')
     pagedf = pd.read_csv(pagetsv, sep='\t')
 
@@ -187,9 +198,10 @@ def get_adj_titles(linkstsv, pagetsv, adtitlespath, iderrspath):
     joineddf.loc[joineddf.tgttitle.notnull()]. \
         to_csv(adjtitlespath, columns=['srctitle', 'tgttitle'], index=False, sep='\t')
 
-    joineddf = joineddf.loc[joineddf.tgttitle.isnull()]
-    info('Ids with missing (or invalid) titles: {}'.format(len(joineddf)))
-    joineddf.to_csv(iderrspath, columns=[], sep='\t', index=True, index_label='srcid')
+    errids = joineddf.loc[joineddf.tgttitle.isnull()].index
+    errids = errids.to_numpy(dtype='int').astype(str)
+    info('Ids with missing (or invalid) titles: {}'.format(len(errids)))
+    open(titleerrspath, 'w').write('\n'.join(errids))
 
 ##########################################################
 if __name__ == "__main__":
@@ -222,11 +234,11 @@ if __name__ == "__main__":
     pagetsv = pagecsv.replace('.csv', '.tsv')
     parse_csv_page(pagecsv, pagetsv)
 
-    adjidspath = pjoin(args.outdir, '{}adjids.csv'.format(suff))
-    titleerrspath = pjoin(args.outdir, '{}titleerrs.csv'.format(suff))
+    adjidspath = pjoin(args.outdir, '{}adjids.tsv'.format(suff))
+    titleerrspath = pjoin(args.outdir, '{}titleerrs.tsv'.format(suff))
     get_adj_ids(linkstsv, pagetsv, adjidspath, titleerrspath)
-    adjtitlespath = pjoin(args.outdir, '{}adjtitles.csv'.format(suff))
-    iderrspath = pjoin(args.outdir, '{}iderrs.csv'.format(suff))
+    adjtitlespath = pjoin(args.outdir, '{}adjtitles.tsv'.format(suff))
+    iderrspath = pjoin(args.outdir, '{}iderrs.tsv'.format(suff))
     get_adj_titles(linkstsv, pagetsv, adjtitlespath, iderrspath)
 
     info('Elapsed time:{:.02f}s'.format(time.time()-t0))
