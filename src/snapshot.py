@@ -60,7 +60,7 @@ def sql_to_csv(sqlpath, outpath):
         info('FILE {} ALREADY EXISTS! ABORTING...'.format(outpath))
         return
 
-    sqlfh = open(sqlpath, 'r')
+    sqlfh = open(sqlpath, 'r', encoding='latin-1')
     csvfh = open(outpath, 'w')
 
     for l in sqlfh:
@@ -164,6 +164,40 @@ def parse_csv_page(csvpath, outpath):
     fh.close()
 
 ##########################################################
+def parse_csv_categ(csvpath, outpath):
+    """Parse csv file and output to @outpath.
+    Table CategoryLinks contains 6 fields:
+    cl_from, cl_to, cl_sortkey, cl_timestamp, cl_sortkey_prefix, cl_collation, cl_type
+    Here we are just interested in cl_from (page id), cl_to (categ title) and
+    possibly cl_type (page, file, subcat)
+    """
+    info(inspect.stack()[0][3] + '()')
+
+    if os.path.isfile(outpath):
+        info('FILE {} ALREADY EXISTS! ABORTING...'.format(outpath))
+        return
+
+    fh = open(csvpath)
+
+    rows = []
+    for i, l in enumerate(fh):
+        els = l.split("','")
+        pid, title = els[0].split(",'")
+        # titleels = els[1:-5]
+        ptype = els[-1].strip(" '\n")
+
+        if len(els) > 6: breakpoint()
+        ispage = True if ptype == 'page' else False
+
+        title = clean_text(title, mostlyorig=True)
+        row = [pid, title]
+        rows.append(row)
+
+    df = pd.DataFrame(rows, columns=['pid', 'title', 'ispage'])
+    df.to_csv(outpath, sep='\t', index=False, float_format='%.0f')
+    fh.close()
+
+##########################################################
 def get_adj_ids(linkstsv, pagetsv, adjidspath, titleerrspath):
     """Get adjacency list using ids"""
     info(inspect.stack()[0][3] + '()')
@@ -231,6 +265,7 @@ if __name__ == "__main__":
     suff = '{}wiki-{}-'.format(lan, args.date)
     linkssql = pjoin(args.sqldir, '{}pagelinks.sql'.format(suff))
     pagesql = pjoin(args.sqldir, '{}page.sql'.format(suff))
+    categsql = pjoin(args.sqldir, '{}categorylinks.sql'.format(suff))
 
     linkscsv = pjoin(args.outdir, '{}pagelinks.csv'.format(suff))
     sql_to_csv(linkssql, linkscsv)
@@ -241,6 +276,11 @@ if __name__ == "__main__":
     sql_to_csv(pagesql, pagecsv)
     pagetsv = pagecsv.replace('.csv', '.tsv')
     parse_csv_page(pagecsv, pagetsv)
+
+    categcsv = pjoin(args.outdir, '{}categ.csv'.format(suff))
+    sql_to_csv(categsql, categcsv)
+    categtsv = categcsv.replace('.csv', '.tsv')
+    parse_csv_categ(categcsv, categtsv)
 
     adjidspath = pjoin(args.outdir, '{}adjids.tsv'.format(suff))
     titleerrspath = pjoin(args.outdir, '{}titleerrs.tsv'.format(suff))
