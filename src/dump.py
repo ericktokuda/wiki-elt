@@ -181,8 +181,9 @@ def process_revision(rev):
     return revrow, linkrows, True
 
 ##########################################################
-def process_dump(dumppath, outdir):
-    """Process a dump file. Just accepts historical dumps in bz2 format"""
+def process_dump(dumppath, outdir, compr='.gz'):
+    """Process a dump file. Just accepts historical dumps in bz2 format.
+    Check if the tsv (compressed or not) is already present in @outdir."""
     fname = os.path.basename(dumppath)
 
     if (not fname.endswith('.bz2')) or (not 'history' in fname):
@@ -208,7 +209,8 @@ def process_dump(dumppath, outdir):
     errpath0 = pjoin(outdir, suff + '_reverr.tsv')
     linkpath0 = pjoin(outdir, suff + '_links.tsv')
 
-    if os.path.isfile(pagepath0): return # Already processed dump
+    if os.path.isfile(pagepath0) or os.path.isfile(pagepath0 + compr):
+        return # Already processed dump
 
     dump = mwxml.Dump.from_file(stdout)
     #TODO: Parse header to get the namespaces for this language, givne the ns ids
@@ -357,8 +359,8 @@ def process_dumps(dumpsdir, nprocs, outdir):
     # lang = list(langs)[0]; dumpdt = list(dumpdts)[0]
 
     if nprocs == 1:
-        # [ process_dump_protected(p, outdir) for p in dumppaths ]
-        [ process_dump(p, outdir) for p in dumppaths ]
+        [ process_dump_protected(p, outdir) for p in dumppaths ]
+        # [ process_dump(p, outdir) for p in dumppaths ] # TODO: REMOVE THIS
     else:
         fargs = [ [p, outdir] for p in dumppaths ]
         with Pool(processes=nprocs) as pool:
