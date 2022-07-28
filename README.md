@@ -2,6 +2,6 @@
 
 Main scripts in src/:
 
- * [src/snapshot.py](snapshot.py): handles a snapshot of a given language in a given date
- * [src/dump.py](dump.py): Process the historical dumps
+ * [snapshot.py](src/snapshot.py): handles a snapshot of a given language in a given date
+ * [dump.py](src/dump.py): Process the historical dumps
  
