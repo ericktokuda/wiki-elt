@@ -15,9 +15,9 @@ import matplotlib; matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from myutils import info, create_readme
 import pandas as pd
-from subprocess import Popen, PIPE, DEVNULL
-from mysqltocsv import mysql2csv
-import csv
+import subprocess
+
+MYSQL2CSV = 'src/mysqlgz2csv.sh'
 
 ##########################################################
 def sqlgz_to_csv(dumppath, outpath):
@@ -49,35 +49,6 @@ def sqlgz_to_csv(dumppath, outpath):
             print(v, file=fh)
 
     fh.close()
-
-##########################################################
-def sql_to_csv(sqlpath, outpath):
-    """Open compressed (gz) dump, parse its content, and output to csv
-    """
-    info(inspect.stack()[0][3] + '()')
-
-    if os.path.isfile(outpath):
-        info('FILE {} ALREADY EXISTS! ABORTING...'.format(outpath))
-        return
-
-    sqlfh = open(sqlpath, 'r', encoding='latin-1')
-    csvfh = open(outpath, 'w')
-
-    for l in sqlfh:
-        line = str(l)
-        if not 'INSERT INTO' in line: continue
-        values = line.split('),(')
-        idx = values[0].find('(')
-        first = values[0][idx + 1:]
-        values[0] = first
-        last = values[-1].split(');')[0].strip()
-        values[-1] = last
-
-        for v in values:
-            print(v, file=csvfh)
-
-    csvfh.close()
-    sqlfh.close()
 
 ##########################################################
 def clean_text(txt, mostlyorig=True):
@@ -116,15 +87,6 @@ def parse_csv_pagelinks(csvpath, outpath):
 
         title = clean_text(','.join(titleels), mostlyorig=True)
 
-        # aux1 = []
-        # for el in titleels:
-            # aux2 = el
-            # for c in u'\\"\'`‘’\ufeff':
-                # aux2 = aux2.replace(c, '')
-            # aux1.append(aux2.strip())
-            # aux1.append(aux2.strip(" '"))
-
-        # middlestr = ','.join(aux1)
         row = [els[0], title]
         rows.append(row)
 
@@ -166,6 +128,35 @@ def parse_csv_page(csvpath, outpath):
 ##########################################################
 def parse_csv_categ(csvpath, outpath):
     """Parse csv file and output to @outpath.
+    Table Category contains 6 fields:
+    cat_id, cat_title, cat_pages, cat_subcats, cat_files, cat_hidden
+    Here we are just interested in cat_id, cat_title, and cat_files
+    """
+    info(inspect.stack()[0][3] + '()')
+
+    if os.path.isfile(outpath):
+        info('FILE {} ALREADY EXISTS! ABORTING...'.format(outpath))
+        return
+
+    fh = open(csvpath)
+
+    rows = []
+    for i, l in enumerate(fh):
+        els = l.split(",")
+        pid = els[0]
+        n = els[-3]
+        titleels = els[1:-3]
+        cattitle = clean_text(','.join(titleels), mostlyorig=True)
+        row = [pid, cattitle, n]
+        rows.append(row)
+
+    df = pd.DataFrame(rows, columns=['pid', 'cattitle', 'npages'])
+    df.to_csv(outpath, sep='\t', index=False, float_format='%.0f')
+    fh.close()
+
+##########################################################
+def parse_csv_categlinks(csvpath, outpath):
+    """Parse csv file and output to @outpath.
     Table CategoryLinks contains 6 fields:
     cl_from, cl_to, cl_sortkey, cl_timestamp, cl_sortkey_prefix, cl_collation, cl_type
     Here we are just interested in cl_from (page id), cl_to (categ title) and
@@ -187,10 +178,10 @@ def parse_csv_categ(csvpath, outpath):
         ptype = els[-1].strip(" '\n")
 
         if len(els) > 6: breakpoint()
-        ispage = True if ptype == 'page' else False
+        ispage = 1 if ptype == 'page' else 0
 
         title = clean_text(title, mostlyorig=True)
-        row = [pid, title]
+        row = [pid, title, ispage]
         rows.append(row)
 
     df = pd.DataFrame(rows, columns=['pid', 'title', 'ispage'])
@@ -246,11 +237,17 @@ def get_adj_titles(linkstsv, pagetsv, adtitlespath, iderrspath):
     open(iderrspath, 'w').write('\n'.join(errids))
 
 ##########################################################
+def mysqlgz2csv(mysqlgzpath, csvpath):
+    cmd = ['bash', MYSQL2CSV, mysqlgzpath, csvpath]
+    subprocess.run(cmd)
+
+##########################################################
 if __name__ == "__main__":
     info(datetime.date.today())
     t0 = time.time()
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--sqldir', help='Path to the uncompressed mysql file.')
+    parser.add_argument('--sqldir', required=True,
+                        help='Path to the uncompressed mysql file.')
     parser.add_argument('--date', default='20220501',
                         help='Date of the dump')
     parser.add_argument('--lang', default='en',
@@ -263,31 +260,35 @@ if __name__ == "__main__":
 
     lan = args.lang
     suff = '{}wiki-{}-'.format(lan, args.date)
-    linkssql = pjoin(args.sqldir, '{}pagelinks.sql'.format(suff))
-    pagesql = pjoin(args.sqldir, '{}page.sql'.format(suff))
-    categsql = pjoin(args.sqldir, '{}categorylinks.sql'.format(suff))
 
-    linkscsv = pjoin(args.outdir, '{}pagelinks.csv'.format(suff))
-    sql_to_csv(linkssql, linkscsv)
-    linkstsv = linkscsv.replace('.csv', '.tsv')
-    parse_csv_pagelinks(linkscsv, linkstsv)
+    funcs = {'page': parse_csv_page, # pageid, pagetitle
+             'pagelinks': parse_csv_pagelinks, # pageid, pagelinktitles
+             'category': parse_csv_categ, # categoryid, categorytitle
+             'categorylinks': parse_csv_categlinks # pageid -> categorytitle
+             }
 
-    pagecsv = pjoin(args.outdir, '{}page.csv'.format(suff))
-    sql_to_csv(pagesql, pagecsv)
-    pagetsv = pagecsv.replace('.csv', '.tsv')
-    parse_csv_page(pagecsv, pagetsv)
+    for k, parser in funcs.items():
+        gzpath = pjoin(args.sqldir, '{}{}.sql.gz'.format(suff, k))
+        csvpath = pjoin(args.outdir, '{}{}.csv'.format(suff, k))
+        tsvpath = pjoin(args.outdir, '{}{}.tsv'.format(suff, k))
+        mysqlgz2csv(gzpath, csvpath)
+        parser(csvpath, tsvpath)
 
-    categcsv = pjoin(args.outdir, '{}categ.csv'.format(suff))
-    sql_to_csv(categsql, categcsv)
-    categtsv = categcsv.replace('.csv', '.tsv')
-    parse_csv_categ(categcsv, categtsv)
+    linkstsv = pjoin(args.outdir, '{}{}.tsv'.format(suff, 'pagelinks'))
+    pagetsv = pjoin(args.outdir, '{}{}.tsv'.format(suff, 'page'))
 
+    # Idenfying page from their ids
     adjidspath = pjoin(args.outdir, '{}adjids.tsv'.format(suff))
     titleerrspath = pjoin(args.outdir, '{}titleerrs.tsv'.format(suff))
     get_adj_ids(linkstsv, pagetsv, adjidspath, titleerrspath)
+
+    # Idenfying page from their title
     adjtitlespath = pjoin(args.outdir, '{}adjtitles.tsv'.format(suff))
     iderrspath = pjoin(args.outdir, '{}iderrs.tsv'.format(suff))
     get_adj_titles(linkstsv, pagetsv, adjtitlespath, iderrspath)
+
+    # We can sort these edge list so it is easier to generate the adj list
+    # sort -n FILE
 
     info('Elapsed time:{:.02f}s'.format(time.time()-t0))
     info('Output generated in {}'.format(args.outdir))

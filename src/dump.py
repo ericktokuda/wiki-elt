@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
 """Parse Wikipedia data
 Inspired by the Deep Learning Cookbook, from D.Osinga.
+
+Generates four files, one for each {FILE}.bz2:
+        {FILE}_page.tsv: [page.id, page.title, page.namespace, isredir])
+        {FILE}_revs.tsv: [revid, pageid, parentid, timestamp, userid, isminor]
+        {FILE}_links.tsv: [revid, link, isurl, isredirlink]
+        {FILE}_reverr.tsv: revid
+
+Also check the documentation of process_revision.
 """
 
 import argparse
@@ -132,7 +140,7 @@ def is_redirect(txt, redirlowerkw):
 ##########################################################
 def process_revision(rev):
     """Process a mwxml revision. Returns the information of the revision, the links,
-    and whether the revision the link errors.
+    and whether the revision the link errors. Also check the header of this document.
     Return:
     revision: [revid, pageid, parentid, timestamp, userid, isminor]
     links: list of list [revid, link, isurl, isredirlink]
@@ -210,6 +218,7 @@ def process_dump(dumppath, outdir, compr='.gz'):
     linkpath0 = pjoin(outdir, suff + '_links.tsv')
 
     if os.path.isfile(pagepath0) or os.path.isfile(pagepath0 + compr):
+        info('Skipping ' + dumppath)
         return # Already processed dump
 
     dump = mwxml.Dump.from_file(stdout)
